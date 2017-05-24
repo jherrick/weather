@@ -3,6 +3,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty
 from kivy.network.urlrequest import UrlRequest
 
+class WeatherRoot(BoxLayout):
+	pass
+
 class AddLocationForm(BoxLayout):
 	search_input = ObjectProperty()
 
@@ -15,6 +18,10 @@ class AddLocationForm(BoxLayout):
 		data = json.loads(data.decode()) if not isinstance(data, dict) else data
 		cities = ["{} ({})".format(d['name'], d['sys']['country']) for d in data['list']]
 		self.search_results.item_strings = cities
+		self.search_results.adapter.data.clear()
+		self.search_results.adapter.data.extend(cities)
+		self.search_results._trigger_reset_populate()
+		
 
 class WeatherApp(App):
 	pass
