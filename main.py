@@ -60,7 +60,7 @@ class WeatherRoot(BoxLayout):
 
 class WeatherApp(App):
 	def build_config(self, config):
-		config.setdefaults('General', {'temp_type': "Imperial"})
+		config.setdefaults('General', {'temp_type': "Imperial", 'forecast_range': 3})
 
 	def build_settings(self, settings):
 		settings.add_json_panel("Weather Settings", self.config, data="""
@@ -70,17 +70,30 @@ class WeatherApp(App):
 					"section": "General",
 					"key": "temp_type",
 					"options": ["Metric", "Imperial"]
+				},
+				{"type": "options",
+					"title": "Forecast Range",
+					"section": "General",
+					"key": "forecast_range",
+					"options": ["3", "5", "7"]
 				}
 			]"""
 			)
 
 	def on_config_change(self, config, section, key, value):
-		if config is self.config and key == "temp_type":
-			try:
-				self.root.current_weather.update_weather()
-				self.root.forecast.update_weather()
-			except AttributeError:
-				pass
+		if config is self.config:
+			if key == "temp_type":
+				try:
+					self.root.current_weather.update_weather()
+					self.root.forecast.update_weather()
+				except AttributeError:
+					pass
+			if key == "forecast_range":
+				try:
+					self.root.current_weather.update_weather()
+					self.root.forecast.update_weather()
+				except AttributeError:
+					pass
 
 class CurrentWeather(BoxLayout):
 	location = ListProperty(['New York', 'US'])
@@ -92,8 +105,8 @@ class CurrentWeather(BoxLayout):
 
 	def update_weather(self):
 		config = WeatherApp.get_running_app().config 
-		temp_type = config.getdefault("general", "temp_type", "metric").lower()
-		weather_template = "http://api.openweathermap.org/data/2.5/" + "weather?q={},{}&units=Imperial&appid=c8f1502f31609bd338a5a87be7c5b41f"
+		temp_type = config.getdefault("General", "temp_type", "Imperial").lower()
+		weather_template = "http://api.openweathermap.org/data/2.5/" + "weather?q={},{}&units={}&appid=c8f1502f31609bd338a5a87be7c5b41f"
 		weather_url = weather_template.format(self.location[0],self.location[1],temp_type)
 		request = UrlRequest(weather_url, self.weather_retrieved)
 
@@ -129,9 +142,9 @@ class Forecast(BoxLayout):
 	def update_weather(self):
 		config = WeatherApp.get_running_app().config
 		temp_type = config.getdefault("General", "temp_type", "Imperial").lower()
-		weather_template = "http://api.openweathermap.org/data/2.5/forecast/" + "daily?q={},{}&units={}&cnt=3&appid=c8f1502f31609bd338a5a87be7c5b41f"
-		weather_url = weather_template.format(self.location[0], self.location[1], temp_type)
-		print weather_url
+		forecast_range = config.getdefault("General", "forecast_range", "3").lower()
+		weather_template = "http://api.openweathermap.org/data/2.5/forecast/" + "daily?q={},{}&units={}&cnt={}&appid=c8f1502f31609bd338a5a87be7c5b41f"
+		weather_url = weather_template.format(self.location[0], self.location[1], temp_type, forecast_range)
 		request = UrlRequest(weather_url, self.weather_retrieved)
 
 	def weather_retrieved(self, request, data):
